@@ -5,11 +5,11 @@
 [submodule "ccpp/framework"]
   path = ccpp/framework
   url = https://github.com/NOAA-EPIC/ccpp-framework
-  branch = main
+  branch = feature/srw-release
 [submodule "ccpp/physics"]
   path = ccpp/physics
   url = https://github.com/NOAA-EPIC/ccpp-physics
-  branch = main
+  branch = feature/srw-release
 [submodule "upp"]
   path = upp
   url = https://github.com/NOAA-EMC/UPP
