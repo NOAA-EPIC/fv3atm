@@ -600,7 +600,7 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
                                      Time_restart, Time_step_restart
     type(time_type)               :: iautime
     integer                       :: io_unit, calendar_type_res, date_res(6), date_init_res(6)
-
+    integer      :: pelistZero(6)
     integer,allocatable           :: grid_number_on_all_pets(:)
     logical,allocatable           :: is_moving_on_all_pets(:), is_moving(:)
     character(len=7)              :: nest_suffix
@@ -614,6 +614,9 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
     timeis = mpi_wtime()
     rc     = ESMF_SUCCESS
 !
+    do i=1,6
+      pelistZero(i) = i - 1
+    enddo
     call ESMF_VMGetCurrent(vm=vm,rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
@@ -865,8 +868,9 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
 
         pelist => null()
         call atmos_model_get_nth_domain_info(n, layout, nx, ny, pelist)
-        call ESMF_VMBroadcast(vm, bcstData=layout, count=2, rootPet=pelist(1), rc=rc); ESMF_ERR_ABORT(rc)
-
+!       call ESMF_VMBroadcast(vm, bcstData=layout, count=2, rootPet=pelist(1), rc=rc); ESMF_ERR_ABORT(rc)
+        call ESMF_VMBroadcast(vm, bcstData=layout, count=2, rootPet=0, rc=rc); ESMF_ERR_ABORT(rc)
+        write(6,*) 'HEY, mype, mpp_pe and petlist are',mype, mpp_pe(), pelist
         if (n==1) then
            ! on grid==1 (top level parent) determine if the domain is global or regional
            top_parent_is_global = .true.
@@ -875,10 +879,9 @@ if (rc /= ESMF_SUCCESS) write(0,*) 'rc=',rc,__FILE__,__LINE__; if(ESMF_LogFoundE
            endif
            call mpi_bcast(top_parent_is_global, 1, MPI_LOGICAL, 0, fcst_mpi_comm, rc)
         endif
-
+        
         if (n==1 .and. top_parent_is_global) then
-
-          fcstGridComp(n) = ESMF_GridCompCreate(name="global", petList=pelist, rc=rc); ESMF_ERR_ABORT(rc)
+          fcstGridComp(n) = ESMF_GridCompCreate(name="global", petList=pelistZero, rc=rc); ESMF_ERR_ABORT(rc)
 
           call ESMF_InfoGetFromHost(fcstGridComp(n), info=info, rc=rc); ESMF_ERR_ABORT(rc)
           call ESMF_InfoSet(info, key="layout", values=layout, rc=rc); ESMF_ERR_ABORT(rc)
